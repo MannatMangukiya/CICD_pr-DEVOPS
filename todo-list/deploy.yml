@@ -1,0 +1,56 @@
+name: CI-CD Pipeline for MERN App
+
+on:
+  push:
+    branches:
+      - main  # Run workflow when pushing to the 'main' branch
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout code from the repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # 2. Install Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # 4. Run tests (optional)
+      - name: Run tests
+        run: npm test
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout repository again in the deploy stage
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # 2. Setup SSH for deploying to the server
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # 3. Deploy to local server
+      - name: Deploy to local server
+        run: |
+          ssh -o StrictHostKeyChecking=no <username>@<server_ip> "
+            cd /path/to/your/project &&
+            git pull origin main &&
+            npm install &&
+            pm2 restart all
+          "
